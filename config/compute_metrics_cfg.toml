@@ -1,0 +1,3 @@
+[ppl]
+n_folds = 1
+n_jobs = 8

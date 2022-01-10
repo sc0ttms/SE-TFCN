@@ -1,0 +1,11 @@
+[random]
+seed = 0
+
+[path]
+# dataset = "/home/sc0ttms/work/ML/datasets/dns_interspeech_2021_mandarin_1h"
+dataset = "/dataset"
+
+[dataset]
+audio_format = "wav"
+valid_ratio = 0.1
+test_ratio = 0.1

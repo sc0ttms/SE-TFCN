@@ -1,0 +1,63 @@
+[meta]
+use_cudnn = true
+use_amp = true
+
+[ppl]
+n_folds = 1
+n_jobs = 8
+
+[path]
+base = "/home/sc0ttms/work/ML/model/"
+# base = "/model/"
+pre_model = 0
+# pre_model = "/model/checkpoints/base/latest_model.pth"
+
+[visual]
+samples = 2
+
+[checkpoint]
+save_interval = 1
+
+[optimizer]
+name = "Adam"
+lr = 1e-3
+
+[grad]
+clip_grad_norm_value = 10.0
+
+[lr_scheduler]
+name = "ReduceLROnPlateau"
+mode = "min"
+factor = 0.1
+patience = 3
+threshold = 1e-3
+min_lr = 1e-6
+verbose = true
+
+[dataloader]
+batch_size = [130, 40]
+num_workers = 8
+drop_last = false
+pin_memory = true
+
+[dataset]
+sr = 16000
+n_fft = 512
+win_len = 512
+hop_len = 256
+audio_len = 2.0
+limit = 2
+
+[model]
+name = "TFCN"
+num_channels = [1, 16, 64]
+kernel_size = [[5, 7], [3, 3]]
+stride = 1
+num_repeated = 4
+num_dilated = 8
+
+[train]
+resume = false
+epochs = 9999
+valid_start_epoch = 1
+valid_interval = 1

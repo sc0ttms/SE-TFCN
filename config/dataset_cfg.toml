@@ -1,0 +1,16 @@
+[random]
+seed = 0
+
+[dataloader]
+batch_size = 20
+num_workers = 4
+drop_last = false
+pin_memory = false
+
+[dataset]
+sr = 16000
+n_fft = 512
+win_len = 512
+hop_len = 256
+audio_len = 3.072
+limit = 0
