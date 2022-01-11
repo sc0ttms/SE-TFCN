@@ -46,8 +46,8 @@ if __name__ == "__main__":
     print(f"Test DilatedBlock Module Start...")
 
     # get model
-    # model = DilatedBlock([16, 64], kernel_size=3, stride=1, padding=(1, 2), dilation=1)
-    model = DilatedBlock([16, 64], kernel_size=3, stride=1, padding=(2, 4), dilation=2)
+    # model = DilatedBlock([16, 64], kernel_size=(3, 3), stride=1, padding=(1, 2), dilation=1)
+    model = DilatedBlock([16, 64], kernel_size=(3, 3), stride=1, padding=(2, 4), dilation=2)
     # get inputs
     inputs = torch.randn([2, 16, 256, 201])
     # print network
