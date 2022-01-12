@@ -5,6 +5,7 @@ import os
 import argparse
 import toml
 from tqdm import tqdm
+from torchinfo import summary
 import librosa
 import librosa.display
 import matplotlib.pyplot as plt
@@ -102,7 +103,10 @@ class BaseTrainer:
         )
 
         # print params
-        print_networks([self.model])
+        self.print_networks()
+
+    def print_networks(self):
+        summary(self.model, input_size=(2, 1, 257, 201))
 
     @staticmethod
     def loss(enh_lps, clean_lps):
