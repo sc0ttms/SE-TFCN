@@ -19,7 +19,7 @@ sys.path.append(os.getcwd())
 from dataset.dataset import DNS_Dataset
 from module.tfcn import TFCN
 from dataset.compute_metrics import compute_metric
-from audio.utils import prepare_empty_path, print_networks
+from audio.utils import prepare_empty_path
 from audio.metrics import SI_SDR, transform_pesq_range
 from audio.feature import EPS
 
