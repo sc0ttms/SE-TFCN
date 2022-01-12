@@ -7,8 +7,8 @@ n_folds = 1
 n_jobs = 8
 
 [path]
-base = "/home/sc0ttms/work/ML/model/"
-# base = "/model/"
+# base = "/home/sc0ttms/ML/model/"
+base = "/model/"
 pre_model = 0
 # pre_model = "/model/checkpoints/base/latest_model.pth"
 
@@ -46,7 +46,7 @@ n_fft = 512
 win_len = 512
 hop_len = 256
 audio_len = 2.0
-limit = 2
+limit = 0
 
 [model]
 name = "TFCN"
