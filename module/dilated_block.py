@@ -17,7 +17,7 @@ class DilatedBlock(nn.Module):
 
         self.net = nn.Sequential(
             # conv_0
-            nn.Conv2d(self.num_channels[0], self.num_channels[1], kernel_size=1),
+            nn.Conv2d(self.num_channels[0], self.num_channels[1], kernel_size=1, bias=False),
             nn.PReLU(),
             nn.BatchNorm2d(self.num_channels[1]),
             # conv_1
@@ -29,11 +29,12 @@ class DilatedBlock(nn.Module):
                 padding=self.padding,
                 dilation=self.dilation,
                 groups=self.num_channels[1],
+                bias=False,
             ),
             nn.PReLU(),
             nn.BatchNorm2d(self.num_channels[1]),
             # conv_2
-            nn.Conv2d(self.num_channels[1], self.num_channels[0], kernel_size=1),
+            nn.Conv2d(self.num_channels[1], self.num_channels[0], kernel_size=1, bias=False),
         )
 
     def forward(self, inputs):

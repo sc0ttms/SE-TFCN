@@ -11,7 +11,9 @@ class OutputBlock(nn.Module):
 
         self.num_channels = num_channels
 
-        self.net = nn.Sequential(nn.Conv2d(self.num_channels[0], self.num_channels[1], kernel_size=1), nn.PReLU())
+        self.net = nn.Sequential(
+            nn.Conv2d(self.num_channels[0], self.num_channels[1], kernel_size=1, bias=False), nn.PReLU()
+        )
 
     def forward(self, inputs):
         # inputs [B, C, F, T] -> outputs [B, 1, F, T]
