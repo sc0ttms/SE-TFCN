@@ -27,7 +27,7 @@ class TFCN(nn.Module):
             num_channels=self.num_channels[:2],
             kernel_size=self.kernel_size[0],
             stride=self.stride,
-            padding=((self.kernel_size[0][0] - 1) // 2, self.kernel_size[0][1] - 1),
+            padding=((self.kernel_size[0][0] - 1) // 2, (self.kernel_size[0][1] - 1) // 2),
         )
 
         repeated_layer = []
@@ -57,7 +57,7 @@ if __name__ == "__main__":
     # get model
     model = TFCN([1, 16, 64], kernel_size=[(7, 5), (3, 3)], stride=1, num_repeated=4, num_dilated=8)
     # get inputs
-    inputs = torch.randn([1, 1, 256, 201])
+    inputs = torch.randn([2, 1, 257, 201])
     # print network
     summary(model, input_size=inputs.shape)
     # forward
