@@ -2,7 +2,7 @@
 
 import torch
 import torch.nn as nn
-from thop import profile
+from torchinfo import summary
 
 
 class OutputBlock(nn.Module):
@@ -27,8 +27,7 @@ if __name__ == "__main__":
     # get inputs
     inputs = torch.randn([2, 16, 256, 201])
     # print network
-    macs, params = profile(model, inputs=(inputs,), custom_ops={})
-    print(f"flops {macs / 1e9:.6f} G, params {params / 1e6:.6f} M")
+    summary(model, input_size=inputs.shape)
     # forward
     outputs = model(inputs)
 

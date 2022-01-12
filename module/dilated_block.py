@@ -2,7 +2,7 @@
 
 import torch
 import torch.nn as nn
-from thop import profile
+from torchinfo import summary
 
 
 class DilatedBlock(nn.Module):
@@ -38,7 +38,7 @@ class DilatedBlock(nn.Module):
 
     def forward(self, inputs):
         # inputs [B, C, F, T] -> outputs [B, C, F, T]
-        outputs = self.net(inputs)[:, :, :, : -self.padding[1]] + inputs
+        outputs = self.net(inputs) + inputs
         return outputs
 
 
@@ -46,13 +46,12 @@ if __name__ == "__main__":
     print(f"Test DilatedBlock Module Start...")
 
     # get model
-    # model = DilatedBlock([16, 64], kernel_size=(3, 3), stride=1, padding=(1, 2), dilation=1)
-    model = DilatedBlock([16, 64], kernel_size=(3, 3), stride=1, padding=(2, 4), dilation=2)
+    # model = DilatedBlock([16, 64], kernel_size=(3, 3), stride=1, padding=(1, 1), dilation=(1, 1))
+    model = DilatedBlock([16, 64], kernel_size=(3, 3), stride=1, padding=(1, 2), dilation=(1, 2))
     # get inputs
     inputs = torch.randn([2, 16, 256, 201])
     # print network
-    macs, params = profile(model, inputs=(inputs,), custom_ops={})
-    print(f"flops {macs / 1e9:.6f} G, params {params / 1e6:.6f} M")
+    summary(model, input_size=inputs.shape)
     # forward
     outputs = model(inputs)
 

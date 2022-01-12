@@ -2,7 +2,7 @@
 
 import torch
 import torch.nn as nn
-from thop import profile
+from torchinfo import summary
 
 
 class InputBlock(nn.Module):
@@ -27,7 +27,7 @@ class InputBlock(nn.Module):
 
     def forward(self, inputs):
         # inputs [B, 1, F, T] -> outputs [B, C, F, T]
-        outputs = self.net(inputs)[:, :, :, : -self.padding[1]]
+        outputs = self.net(inputs)
         return outputs
 
 
@@ -35,12 +35,11 @@ if __name__ == "__main__":
     print(f"Test InputBlock Module Start...")
 
     # get model
-    model = InputBlock([1, 16], kernel_size=(5, 7), stride=1, padding=(2, 6))
+    model = InputBlock([1, 16], kernel_size=(7, 5), stride=1, padding=(3, 2))
     # get inputs
     inputs = torch.randn([2, 1, 256, 201])
     # print network
-    macs, params = profile(model, inputs=(inputs,), custom_ops={})
-    print(f"flops {macs / 1e9:.6f} G, params {params / 1e6:.6f} M")
+    summary(model, input_size=inputs.shape)
     # forward
     outputs = model(inputs)
 

@@ -4,7 +4,7 @@ import sys
 import os
 import torch
 import torch.nn as nn
-from thop import profile
+from torchinfo import summary
 
 
 sys.path.append(os.getcwd())
@@ -55,12 +55,11 @@ if __name__ == "__main__":
     print(f"Test TFCN Module Start...")
 
     # get model
-    model = TFCN([1, 16, 64], kernel_size=[(5, 7), (3, 3)], stride=1, num_repeated=4, num_dilated=8)
+    model = TFCN([1, 16, 64], kernel_size=[(7, 5), (3, 3)], stride=1, num_repeated=4, num_dilated=8)
     # get inputs
-    inputs = torch.randn([2, 1, 256, 201])
+    inputs = torch.randn([1, 1, 256, 201])
     # print network
-    macs, params = profile(model, inputs=(inputs,), custom_ops={})
-    print(f"flops {macs / 1e9:.6f} G, params {params / 1e6:.6f} M")
+    summary(model, input_size=inputs.shape)
     # forward
     outputs = model(inputs)
 

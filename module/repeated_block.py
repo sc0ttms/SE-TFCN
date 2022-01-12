@@ -4,7 +4,7 @@ import sys
 import os
 import torch
 import torch.nn as nn
-from thop import profile
+from torchinfo import summary
 
 
 sys.path.append(os.getcwd())
@@ -28,8 +28,8 @@ class RepeatedBlock(nn.Module):
                     num_channels=self.num_channels,
                     kernel_size=self.kernel_size,
                     stride=self.stride,
-                    padding=((self.kernel_size[0] - 1) * dilation // 2, (self.kernel_size[1] - 1) * dilation),
-                    dilation=dilation,
+                    padding=(1, (self.kernel_size[1] - 1) // 2 * dilation),
+                    dilation=(1, dilation),
                 )
             ]
 
@@ -49,8 +49,7 @@ if __name__ == "__main__":
     # get inputs
     inputs = torch.randn([2, 16, 256, 201])
     # print network
-    macs, params = profile(model, inputs=(inputs,), custom_ops={})
-    print(f"flops {macs / 1e9:.6f} G, params {params / 1e6:.6f} M")
+    summary(model, input_size=inputs.shape)
     # forward
     outputs = model(inputs)
 
