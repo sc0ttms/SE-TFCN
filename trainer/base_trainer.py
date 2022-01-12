@@ -72,7 +72,7 @@ class BaseTrainer:
 
         # init common args
         self.start_epoch = 1
-        self.best_score = 0.0
+        self.best_score = np.finfo(np.float32).max
 
         # init path
         self.checkpoints_path = os.path.join(self.base_path, "checkpoints", "base")
@@ -159,7 +159,7 @@ class BaseTrainer:
         print(f"Latest checkpoint loaded. Training will begin at {self.start_epoch} epoch.")
 
     def is_best_epoch(self, score):
-        if score > self.best_score:
+        if score < self.best_score:
             self.best_score = score
             return True
         else:
