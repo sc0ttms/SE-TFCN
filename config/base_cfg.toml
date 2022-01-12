@@ -51,7 +51,7 @@ limit = 0
 [model]
 name = "TFCN"
 num_channels = [1, 16, 64]
-kernel_size = [[5, 7], [3, 3]]
+kernel_size = [[7, 5], [3, 3]]
 stride = 1
 num_repeated = 4
 num_dilated = 8
