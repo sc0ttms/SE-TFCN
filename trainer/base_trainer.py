@@ -304,7 +304,6 @@ class BaseTrainer:
         # logs
         self.writer.add_scalar("loss/valid", loss_total / len(self.valid_iter), epoch)
 
-        # return metrics_score
         return loss_total / len(self.valid_iter)
 
     @torch.no_grad()
@@ -361,9 +360,9 @@ class BaseTrainer:
                 print(f"Train has finished, Valid is in progress...")
 
                 self.set_model_to_eval_mode()
-                metric_score = self.valid_epoch(epoch)
+                score = self.valid_epoch(epoch)
 
-                if self.is_best_epoch(metric_score):
+                if self.is_best_epoch(score):
                     self.save_checkpoint(epoch, is_best_epoch=True)
 
             # visual
