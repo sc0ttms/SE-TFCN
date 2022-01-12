@@ -10,7 +10,7 @@ n_jobs = 8
 # base = "/home/sc0ttms/ML/model/"
 base = "/model/"
 pre_model = 0
-# pre_model = "/model/checkpoints/base/latest_model.pth"
+# pre_model = "./output/checkpoints/best_model.pth"
 
 [visual]
 samples = 2
@@ -61,3 +61,4 @@ resume = false
 epochs = 9999
 valid_start_epoch = 1
 valid_interval = 1
+visual_interval = 5

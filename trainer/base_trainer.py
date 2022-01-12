@@ -64,6 +64,7 @@ class BaseTrainer:
         self.epochs = config["train"]["epochs"]
         self.valid_start_epoch = config["train"]["valid_start_epoch"]
         self.valid_interval = config["train"]["valid_interval"]
+        self.visual_interval = config["train"]["visual_interval"]
 
         # init cudnn
         torch.backends.cudnn.enabled = self.use_cudnn
@@ -280,11 +281,6 @@ class BaseTrainer:
 
     @torch.no_grad()
     def valid_epoch(self, epoch):
-        # noisy_list = []
-        # clean_list = []
-        # enh_list = []
-        # noisy_files = []
-
         loss_total = 0.0
         for noisy, clean, noisy_file in tqdm(self.valid_iter, desc="valid"):
             noisy = noisy.to(self.device)
@@ -302,34 +298,38 @@ class BaseTrainer:
 
             loss_total += loss.item()
 
-            # enh = self.audio_istft(enh_lps, noisy_phase)
-            # noisy = noisy.detach().squeeze(0).cpu().numpy()
-            # clean = clean.detach().squeeze(0).cpu().numpy()
-            # enh = enh.detach().squeeze(0).cpu().numpy()
-            # assert len(noisy) == len(clean) == len(enh)
-
-            # noisy_list = np.concatenate([noisy_list, noisy], axis=0) if len(noisy_list) else noisy
-            # clean_list = np.concatenate([clean_list, clean], axis=0) if len(clean_list) else clean
-            # enh_list = np.concatenate([enh_list, enh], axis=0) if len(enh_list) else enh
-            # noisy_files = np.concatenate([noisy_files, noisy_file], axis=0) if len(noisy_files) else noisy_file
-
         # update learning rate
         self.update_scheduler(loss_total / len(self.valid_iter))
-
-        # # visual audio
-        # for i in range(self.visual_samples):
-        #     self.audio_visualization(noisy_list[i], clean_list[i], enh_list[i], os.path.basename(noisy_files[i]), epoch)
 
         # logs
         self.writer.add_scalar("loss/valid", loss_total / len(self.valid_iter), epoch)
 
-        # # visual metrics and get valid score
-        # metrics_score = self.metrics_visualization(
-        #     enh_list, clean_list, epoch, n_folds=self.n_folds, n_jobs=self.n_jobs
-        # )
-
         # return metrics_score
         return loss_total / len(self.valid_iter)
+
+    @torch.no_grad()
+    def visual_epoch(self, epoch):
+        for idx, noisy, clean, noisy_file in tqdm(enumerate(self.valid_iter), desc="visual"):
+            noisy = noisy.to(self.device)
+            clean = clean.to(self.device)
+
+            # [B, S] -> [B, F, T]
+            noisy_lps, noisy_phase = self.audio_stft(noisy)
+
+            noisy_lps = noisy_lps.unsqueeze(dim=1)
+            enh_lps = self.model(noisy_lps)
+            enh_lps = enh_lps.squeeze(dim=1)
+
+            enh = self.audio_istft(enh_lps, noisy_phase)
+            noisy = noisy.detach().squeeze(0).cpu().numpy()
+            clean = clean.detach().squeeze(0).cpu().numpy()
+            enh = enh.detach().squeeze(0).cpu().numpy()
+            assert len(noisy) == len(clean) == len(enh)
+
+            if idx > self.visual_samples:
+                self.audio_visualization(noisy, clean, enh, os.path.basename(noisy_file), epoch)
+            else:
+                break
 
     def __call__(self):
         # to device
@@ -365,6 +365,10 @@ class BaseTrainer:
 
                 if self.is_best_epoch(metric_score):
                     self.save_checkpoint(epoch, is_best_epoch=True)
+
+            # visual
+            if epoch % self.visual_interval == 0:
+                self.visual_epoch(epoch)
 
             print(f"{'=' * 20} {epoch} epoch end {'=' * 20}")
 
