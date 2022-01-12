@@ -28,7 +28,7 @@ class RepeatedBlock(nn.Module):
                     num_channels=self.num_channels,
                     kernel_size=self.kernel_size,
                     stride=self.stride,
-                    padding=(1, (self.kernel_size[1] - 1) // 2 * dilation),
+                    padding=(1, dilation),
                     dilation=(1, dilation),
                 )
             ]
