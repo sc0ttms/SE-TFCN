@@ -312,7 +312,8 @@ class BaseTrainer:
 
     @torch.no_grad()
     def visual_epoch(self, epoch):
-        for idx, noisy, clean, noisy_file in tqdm(enumerate(self.valid_iter), desc="visual"):
+        visual_samples_cnt = 0
+        for noisy, clean, noisy_file in tqdm(self.valid_iter, desc="visual"):
             noisy = noisy.to(self.device)
             clean = clean.to(self.device)
 
@@ -329,7 +330,8 @@ class BaseTrainer:
             enh = enh.detach().squeeze(0).cpu().numpy()
             assert len(noisy) == len(clean) == len(enh)
 
-            if idx > self.visual_samples:
+            if visual_samples_cnt > self.visual_samples:
+                visual_samples_cnt += 1
                 self.audio_visualization(noisy, clean, enh, os.path.basename(noisy_file), epoch)
             else:
                 break
