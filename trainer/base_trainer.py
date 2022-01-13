@@ -330,7 +330,7 @@ class BaseTrainer:
             enh = enh.detach().squeeze(0).cpu().numpy()
             assert len(noisy) == len(clean) == len(enh)
 
-            if visual_samples_cnt > self.visual_samples:
+            if visual_samples_cnt < self.visual_samples:
                 visual_samples_cnt += 1
                 self.audio_visualization(noisy, clean, enh, os.path.basename(noisy_file), epoch)
             else:
