@@ -15,7 +15,6 @@ class InputBlock(nn.Module):
         self.padding = padding
 
         self.net = nn.Sequential(
-            nn.BatchNorm2d(self.num_channels[0]),
             nn.Conv2d(
                 self.num_channels[0],
                 self.num_channels[1],
