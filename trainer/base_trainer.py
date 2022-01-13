@@ -232,7 +232,7 @@ class BaseTrainer:
         )
 
         mag = torch.abs(spec)
-        lps = torch.log(mag + EPS)
+        lps = torch.log(mag ** 2 + EPS)
         phase = torch.angle(spec)
         return lps, phase
 
