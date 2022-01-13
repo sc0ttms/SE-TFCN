@@ -61,4 +61,3 @@ resume = false
 epochs = 9999
 valid_start_epoch = 1
 valid_interval = 1
-visual_interval = 5

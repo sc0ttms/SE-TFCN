@@ -65,7 +65,6 @@ class BaseTrainer:
         self.epochs = config["train"]["epochs"]
         self.valid_start_epoch = config["train"]["valid_start_epoch"]
         self.valid_interval = config["train"]["valid_interval"]
-        self.visual_interval = config["train"]["visual_interval"]
 
         # init cudnn
         torch.backends.cudnn.enabled = self.use_cudnn
@@ -310,32 +309,6 @@ class BaseTrainer:
 
         return loss_total / len(self.valid_iter)
 
-    @torch.no_grad()
-    def visual_epoch(self, epoch):
-        visual_samples_cnt = 0
-        for noisy, clean, noisy_file in tqdm(self.valid_iter, desc="visual"):
-            noisy = noisy.to(self.device)
-            clean = clean.to(self.device)
-
-            # [B, S] -> [B, F, T]
-            noisy_lps, noisy_phase = self.audio_stft(noisy)
-
-            noisy_lps = noisy_lps.unsqueeze(dim=1)
-            enh_lps = self.model(noisy_lps)
-            enh_lps = enh_lps.squeeze(dim=1)
-
-            enh = self.audio_istft(enh_lps, noisy_phase)
-            noisy = noisy.detach().squeeze(0).cpu().numpy()
-            clean = clean.detach().squeeze(0).cpu().numpy()
-            enh = enh.detach().squeeze(0).cpu().numpy()
-            assert len(noisy) == len(clean) == len(enh)
-
-            if visual_samples_cnt < self.visual_samples:
-                visual_samples_cnt += 1
-                self.audio_visualization(noisy, clean, enh, os.path.basename(noisy_file), epoch)
-            else:
-                break
-
     def __call__(self):
         # to device
         self.model.to(self.device)
@@ -370,10 +343,6 @@ class BaseTrainer:
 
                 if self.is_best_epoch(score):
                     self.save_checkpoint(epoch, is_best_epoch=True)
-
-            # visual
-            if epoch % self.visual_interval == 0:
-                self.visual_epoch(epoch)
 
             print(f"{'=' * 20} {epoch} epoch end {'=' * 20}")
 
