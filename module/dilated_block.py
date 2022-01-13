@@ -37,12 +37,6 @@ class DilatedBlock(nn.Module):
             nn.Conv2d(self.num_channels[1], self.num_channels[0], kernel_size=1, bias=False),
         )
 
-        self.apply(self.weight_init)
-
-    def weight_init(self, m):
-        if isinstance(m, nn.Conv2d):
-            nn.init.normal_(m.weight.data, std=0.05)
-
     def forward(self, inputs):
         # inputs [B, C, F, T] -> outputs [B, C, F, T]
         outputs = self.net(inputs)[:, :, :, : -self.padding[1]] + inputs
