@@ -35,7 +35,7 @@ min_lr = 1e-7
 verbose = true
 
 [dataloader]
-batch_size = [25, 50]
+batch_size = [12, 20]
 num_workers = 8
 drop_last = false
 pin_memory = true
@@ -43,8 +43,8 @@ pin_memory = true
 [dataset]
 sr = 16000
 n_fft = 512
-win_len = 512
-hop_len = 256
+win_len = 480
+hop_len = 120
 audio_len = 2.0
 limit = 0
 
