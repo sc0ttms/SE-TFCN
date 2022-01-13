@@ -1,14 +1,8 @@
 # -*- coding: utf-8 -*-
 
-import sys
-import os
 import torch
 import torch.nn as nn
 from torchinfo import summary
-
-
-sys.path.append(os.getcwd())
-from audio.feature import offline_laplace_norm, cumulative_laplace_norm
 
 
 class InputBlock(nn.Module):
@@ -29,7 +23,6 @@ class InputBlock(nn.Module):
                 padding=self.padding,
                 bias=False,
             ),
-            nn.BatchNorm2d(self.num_channels[1]),
         )
 
         self.apply(self.weight_init)
@@ -40,7 +33,6 @@ class InputBlock(nn.Module):
 
     def forward(self, inputs):
         # inputs [B, 1, F, T] -> outputs [B, C, F, T]
-        inputs = cumulative_laplace_norm(inputs)
         outputs = self.net(inputs)
         return outputs
 
