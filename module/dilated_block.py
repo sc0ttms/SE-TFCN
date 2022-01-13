@@ -39,7 +39,7 @@ class DilatedBlock(nn.Module):
 
     def forward(self, inputs):
         # inputs [B, C, F, T] -> outputs [B, C, F, T]
-        outputs = self.net(inputs) + inputs
+        outputs = self.net(inputs)[:, :, :, : -self.padding[1]] + inputs
         return outputs
 
 
@@ -47,8 +47,9 @@ if __name__ == "__main__":
     print(f"Test DilatedBlock Module Start...")
 
     # get model
-    # model = DilatedBlock([16, 64], kernel_size=(3, 3), stride=1, padding=(1, 1), dilation=(1, 1))
-    model = DilatedBlock([16, 64], kernel_size=(3, 3), stride=1, padding=(1, 2), dilation=(1, 2))
+    # causal padding=(1, (kernel_size[1]-1)//2*2*dilation[1])
+    # model = DilatedBlock([16, 64], kernel_size=(3, 3), stride=1, padding=(1, 2), dilation=(1, 1))
+    model = DilatedBlock([16, 64], kernel_size=(3, 3), stride=1, padding=(1, 4), dilation=(1, 2))
     # get inputs
     inputs = torch.randn([2, 16, 256, 201])
     # print network
