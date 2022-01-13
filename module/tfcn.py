@@ -8,6 +8,7 @@ from torchinfo import summary
 
 
 sys.path.append(os.getcwd())
+from audio.feature import offline_laplace_norm, cumulative_laplace_norm
 from module.input_block import InputBlock
 from module.repeated_block import RepeatedBlock
 from module.output_block import OutputBlock
@@ -47,7 +48,8 @@ class TFCN(nn.Module):
 
     def forward(self, inputs):
         # inputs [B, 1, F, T] -> outputs [B, 1, F, T]
-        outputs = self.net(inputs)
+        normed = cumulative_laplace_norm(inputs)
+        outputs = self.net(normed)
         return outputs
 
 
