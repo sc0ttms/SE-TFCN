@@ -13,6 +13,13 @@ class OutputBlock(nn.Module):
 
         self.net = nn.Sequential(nn.Conv2d(self.num_channels[0], self.num_channels[1], kernel_size=1), nn.PReLU())
 
+        self.apply(self.weight_init)
+
+    def weight_init(self, m):
+        if isinstance(m, nn.Conv2d):
+            nn.init.normal_(m.weight.data, std=0.05)
+            nn.init.constant_(m.bias.data, 0.0)
+
     def forward(self, inputs):
         # inputs [B, C, F, T] -> outputs [B, 1, F, T]
         outputs = self.net(inputs)
