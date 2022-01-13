@@ -145,7 +145,7 @@ class BaseInferencer(BaseTrainer):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="knowledge distillation trainer")
+    parser = argparse.ArgumentParser(description="inferencer")
     parser.add_argument("-c", "--config", required=True, type=str, help="Config (*.toml).")
     args = parser.parse_args()
 
