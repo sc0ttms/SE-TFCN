@@ -21,7 +21,9 @@ class InputBlock(nn.Module):
                 kernel_size=tuple(self.kernel_size),
                 stride=self.stride,
                 padding=self.padding,
+                bias=False,
             ),
+            nn.BatchNorm2d(self.num_channels[1]),
         )
 
     def forward(self, inputs):
