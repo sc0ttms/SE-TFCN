@@ -32,8 +32,34 @@ class InputBlock(nn.Module):
         if isinstance(m, nn.Conv2d):
             nn.init.normal_(m.weight.data, std=0.05)
 
+    @staticmethod
+    def cumulative_laplace_norm(input):
+        """cumulative laplace norm
+        Args:
+            input (float): [B, C, F, T]
+        Returns:
+            normed (float): [B, C, F, T]
+        """
+        [batch_size, num_channels, num_freqs, num_frames] = input.shape
+        input = input.reshape(batch_size * num_channels, num_freqs, num_frames)
+
+        step_sum = torch.sum(input, dim=1)  # [B * C, F, T] => [B, T]
+        cumulative_sum = torch.cumsum(step_sum, dim=-1)  # [B, T]
+
+        entry_count = torch.arange(num_freqs, num_freqs * num_frames + 1, num_freqs, dtype=input.dtype)
+        entry_count = entry_count.reshape(1, num_frames)  # [1, T]
+        entry_count = entry_count.expand_as(cumulative_sum)  # [1, T] => [B, T]
+
+        cumulative_mean = cumulative_sum / entry_count  # B, T
+        cumulative_mean = cumulative_mean.reshape(batch_size * num_channels, 1, num_frames)
+
+        normed = input / (cumulative_mean)
+
+        return normed.reshape(batch_size, num_channels, num_freqs, num_frames)
+
     def forward(self, inputs):
         # inputs [B, 1, F, T] -> outputs [B, C, F, T]
+        inputs = self.cumulative_laplace_norm(inputs)
         outputs = self.net(inputs)
         return outputs
 
