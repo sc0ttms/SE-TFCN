@@ -144,11 +144,11 @@ class BaseTrainer:
         }
 
         checkpoint_name_prefix = "best" if is_best_epoch else "latest"
-        torch.save(state_dict, os.path.join(self.checkpoints_path, checkpoint_name_prefix + "_checkpoint.tar"))
+        torch.save(state_dict, os.path.join(self.checkpoints_path, checkpoint_name_prefix + "_checkpoint.pth.tar"))
         torch.save(state_dict["model"], os.path.join(self.checkpoints_path, checkpoint_name_prefix + "_model.pth"))
 
     def resume_checkpoint(self):
-        checkpoint_path = os.path.join(self.checkpoints_path, "latest_checkpoint.tar")
+        checkpoint_path = os.path.join(self.checkpoints_path, "latest_checkpoint.pth.tar")
         assert os.path.exists(checkpoint_path)
 
         checkpoint = torch.load(checkpoint_path, map_location="cpu")
