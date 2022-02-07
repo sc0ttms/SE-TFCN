@@ -105,14 +105,11 @@ class BaseTrainer:
         self.print_networks()
 
     def print_networks(self):
-        summary(self.model, input_size=(2, 1, 257, 201))
+        summary(self.model, input_size=(2, 2, 257, 201))
 
     @staticmethod
-    def loss(enh_lps, clean_lps):
-        out = (enh_lps - clean_lps) ** 2
-        out = torch.sqrt(torch.mean(out, dim=1))
-        out = torch.mean(out, dim=1)
-        return torch.mean(out)
+    def loss(enh, clean):
+        return -(torch.mean(SI_SDR(enh, clean)))
 
     def load_pre_model(self):
         load_model = torch.load(self.pre_model_path, map_location="cpu")
@@ -163,7 +160,7 @@ class BaseTrainer:
         print(f"Latest checkpoint loaded. Training will begin at {self.start_epoch} epoch.")
 
     def is_best_epoch(self, score):
-        if score < self.best_score:
+        if score > self.best_score:
             self.best_score = score
             return True
         else:
@@ -220,27 +217,31 @@ class BaseTrainer:
 
     def audio_stft(self, audio):
         # audio [B, S]
-        # [B, S] -> [B, F, T]
+        # [B, S] -> [B, F, T, 2]
         spec = torch.stft(
             audio,
             self.n_fft,
             hop_length=self.hop_len,
             win_length=self.win_len,
             window=self.window,
-            return_complex=True,
+            return_complex=False,
         )
+        return spec
 
-        mag = torch.abs(spec)
-        lps = torch.log(mag ** 2 + EPS)
-        phase = torch.angle(spec)
-        return lps, phase
-
-    def audio_istft(self, lps, phase):
-        # lps [B, F, T]
-        # phase [B, F, T]
-        mag = torch.exp(lps / 2)
+    def audio_istft(self, mask, spec):
+        # mask [B, 2, F, T]
+        # spec [B, F, T, 2]
+        mask_mags = (mask[:, 0, :, :] ** 2 + mask[:, 1, :, :] ** 2) ** 0.5
+        phase_real = mask[:, 0, :, :] / (mask_mags + EPS)
+        phase_imag = mask[:, 1, :, :] / (mask_mags + EPS)
+        mask_phase = torch.atan2(phase_imag, phase_real)
+        mask_mags = torch.tanh(mask_mags)
+        enh_mags = mask_mags * torch.sqrt(spec[:, :, :, 0] ** 2 + spec[:, :, :, 1] ** 2)
+        enh_phase = torch.atan2(spec[:, :, :, 1], spec[:, :, :, 0]) + mask_phase
+        spec_real = enh_mags * torch.cos(enh_phase)
+        spec_imag = enh_mags * torch.sin(enh_phase)
         # [B, F, T]
-        cspec = mag * torch.exp(1j * phase)
+        cspec = spec_real + 1j * spec_imag
         # [B, S]
         audio = torch.istft(
             cspec,
@@ -259,17 +260,17 @@ class BaseTrainer:
             noisy = noisy.to(self.device)
             clean = clean.to(self.device)
 
-            # [B, S] -> [B, F, T]
-            noisy_lps, _ = self.audio_stft(noisy)
-            clean_lps, _ = self.audio_stft(clean)
+            # [B, S] -> [B, F, T, 2]
+            noisy_spec = self.audio_stft(noisy)
 
             self.optimizer.zero_grad()
             with autocast(enabled=self.use_amp):
-                noisy_lps = noisy_lps.unsqueeze(dim=1)
-                enh_lps = self.model(noisy_lps)
-                enh_lps = enh_lps.squeeze(dim=1)
+                mask = self.model(noisy_spec.permute(0, 3, 1, 2))
 
-            loss = self.loss(enh_lps, clean_lps)
+            # [B, S]
+            enh = self.audio_istft(mask, noisy_spec)
+
+            loss = self.loss(enh, clean)
             self.scaler.scale(loss).backward()
             self.scaler.unscale_(self.optimizer)
             torch.nn.utils.clip_grad_norm_(self.model.parameters(), self.clip_grad_norm_value)
@@ -284,30 +285,54 @@ class BaseTrainer:
 
     @torch.no_grad()
     def valid_epoch(self, epoch):
+        noisy_list = []
+        clean_list = []
+        enh_list = []
+        noisy_files = []
+
         loss_total = 0.0
         for noisy, clean, noisy_file in tqdm(self.valid_iter, desc="valid"):
             noisy = noisy.to(self.device)
             clean = clean.to(self.device)
 
-            # [B, S] -> [B, F, T]
-            noisy_lps, noisy_phase = self.audio_stft(noisy)
-            clean_lps, _ = self.audio_stft(clean)
+            # [B, S] -> [B, F, T, 2]
+            noisy_spec = self.audio_stft(noisy)
 
-            noisy_lps = noisy_lps.unsqueeze(dim=1)
-            enh_lps = self.model(noisy_lps)
-            enh_lps = enh_lps.squeeze(dim=1)
+            mask = self.model(noisy_spec.permute(0, 3, 1, 2))
 
-            loss = self.loss(enh_lps, clean_lps)
+            # [B, S]
+            enh = self.audio_istft(mask, noisy_spec)
+
+            loss = self.loss(enh, clean)
 
             loss_total += loss.item()
 
-        # update learning rate
-        self.update_scheduler(loss_total / len(self.valid_iter))
+            noisy = noisy.detach().squeeze(0).cpu().numpy()
+            clean = clean.detach().squeeze(0).cpu().numpy()
+            enh = enh.detach().squeeze(0).cpu().numpy()
+            assert len(noisy) == len(clean) == len(enh)
+
+            noisy_list = np.concatenate([noisy_list, noisy], axis=0) if len(noisy_list) else noisy
+            clean_list = np.concatenate([clean_list, clean], axis=0) if len(clean_list) else clean
+            enh_list = np.concatenate([enh_list, enh], axis=0) if len(enh_list) else enh
+            noisy_files = np.concatenate([noisy_files, noisy_file], axis=0) if len(noisy_files) else noisy_file
+
+        # visual audio
+        for i in range(self.visual_samples):
+            self.audio_visualization(noisy_list[i], clean_list[i], enh_list[i], os.path.basename(noisy_files[i]), epoch)
 
         # logs
         self.writer.add_scalar("loss/valid", loss_total / len(self.valid_iter), epoch)
 
-        return loss_total / len(self.valid_iter)
+        # visual metrics and get valid score
+        metrics_score = self.metrics_visualization(
+            enh_list, clean_list, epoch, n_folds=self.n_folds, n_jobs=self.n_jobs
+        )
+
+        # update learning rate
+        self.update_scheduler(loss_total / len(self.valid_iter))
+
+        return metrics_score
 
     def __call__(self):
         # to device
@@ -339,9 +364,9 @@ class BaseTrainer:
                 print(f"Train has finished, Valid is in progress...")
 
                 self.set_model_to_eval_mode()
-                score = self.valid_epoch(epoch)
+                metric_score = self.valid_epoch(epoch)
 
-                if self.is_best_epoch(score):
+                if self.is_best_epoch(metric_score):
                     self.save_checkpoint(epoch, is_best_epoch=True)
 
             print(f"{'=' * 20} {epoch} epoch end {'=' * 20}")

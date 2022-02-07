@@ -45,12 +45,12 @@ sr = 16000
 n_fft = 512
 win_len = 480
 hop_len = 120
-audio_len = 2.0
+audio_len = 2.025
 limit = 0
 
 [model]
 name = "TFCN"
-num_channels = [1, 16, 64]
+num_channels = [2, 16, 64]
 kernel_size = [[7, 5], [3, 3]]
 stride = 1
 num_repeated = 4

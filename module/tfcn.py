@@ -46,7 +46,7 @@ class TFCN(nn.Module):
         self.net = nn.Sequential(input_layer, *repeated_layer, output_layer)
 
     def forward(self, inputs):
-        # inputs [B, 1, F, T] -> outputs [B, 1, F, T]
+        # inputs [B, 2, F, T] -> outputs [B, 2, F, T]
         outputs = self.net(inputs)
         return outputs
 
@@ -55,9 +55,9 @@ if __name__ == "__main__":
     print(f"Test TFCN Module Start...")
 
     # get model
-    model = TFCN([1, 16, 64], kernel_size=[(7, 5), (3, 3)], stride=1, num_repeated=4, num_dilated=8)
+    model = TFCN([2, 16, 64], kernel_size=[(7, 5), (3, 3)], stride=1, num_repeated=4, num_dilated=8)
     # get inputs
-    inputs = torch.randn([2, 1, 257, 201])
+    inputs = torch.randn([2, 2, 257, 201])
     # print network
     summary(model, input_size=inputs.shape)
     # forward
