@@ -73,7 +73,7 @@ class BaseTrainer:
 
         # init common args
         self.start_epoch = 1
-        self.best_score = np.finfo(np.float32).max
+        self.best_score = np.finfo(np.float32).min
 
         # init path
         self.checkpoints_path = os.path.join(self.base_path, "checkpoints", "base")
